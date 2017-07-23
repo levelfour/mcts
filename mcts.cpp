@@ -208,16 +208,21 @@ public:
   }
 
   virtual int play() {
-    update_tree();
+    GameTree *next;
+    int index_center = index(S/2, S/2);
+    if (_board[index_center] == CellStatus::VACANT) {
+      // heuristic (take center if possible)
+      next = _cur_leaf->leaves[index_center];
+      next = new GameTree(index_center);
+    } else {
+      // choose the leaf with the highest UCB1 score
+      update_tree();
+      next = highest_leaf(_cur_leaf);
+    }
 
-    std::vector<GameTree *> leaves;
-    // choose the leaf with the highest UCB1 score
-    GameTree *next = highest_leaf(_cur_leaf);
-    assert(next);
     _cur_leaf = next;
-    debug_log("mine move %d\n", next->move);
+    debug_log("mine move %d (UCB1 = %f)\n", next->move, next->score(_total_playouts));
     _board[next->move] = CellStatus::MINE;
-
     return next->move;
   }
 
