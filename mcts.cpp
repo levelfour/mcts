@@ -45,6 +45,8 @@ public:
 
   virtual ~Player() {};
 
+  virtual std::string name() = 0;
+
   // play one step ahead
   virtual int play() = 0;
 
@@ -110,7 +112,9 @@ public:
   RandomPlayer() {
   }
 
-  virtual int play() {
+  virtual std::string name() override { return "random"; }
+
+  virtual int play() override {
     while (1) {
       int p = mt_rand() % SIZE;
       if (_board[p] == CellStatus::VACANT) {
@@ -120,7 +124,7 @@ public:
     }
   }
 
-  virtual GameStatus update(int p) {
+  virtual GameStatus update(int p) override {
     assert(_board[p] == CellStatus::VACANT);
     _board[p] = CellStatus::OPPONENT;
     return judge(_board);
@@ -129,6 +133,8 @@ public:
 
 class PerfectPlayer : public RandomPlayer {
 public:
+  virtual std::string name() override { return "perfect"; }
+
   virtual int play() override {
     // take center if available
     if (S % 2 == 1 && _board[index(S/2, S/2)] == CellStatus::VACANT) {
@@ -205,6 +211,7 @@ public:
     _tree = new GameTree(-1);
     _cur_leaf = _tree;
   }
+
   virtual ~MCTSPlayer() {
     // free memory
     std::stack<GameTree *> release_stack;
@@ -224,7 +231,9 @@ public:
     }
   }
 
-  virtual int play() {
+  virtual std::string name() override { return "mcts"; }
+
+  virtual int play() override {
     GameTree *next;
     int index_center = index(S/2, S/2);
     if (_board[index_center] == CellStatus::VACANT) {
@@ -243,7 +252,7 @@ public:
     return next->move;
   }
 
-  virtual GameStatus update(int p) {
+  virtual GameStatus update(int p) override {
     bool found = false;
     debug_log("opp. move %d\n", p);
     for (int i = 0; i < SIZE; i++) {
@@ -423,6 +432,9 @@ int main(int argc, char *argv[]) {
       case 'v':
         verbose = true;
         break;
+
+      default:
+        exit(-1);
     }
   }
 
@@ -434,7 +446,11 @@ int main(int argc, char *argv[]) {
   auto seed = rnd();
   mt_rand.seed(seed);
   if (verbose) {
-    fprintf(stderr, "seed = %u\n", seed);
+    fprintf(stderr, "==============================\n");
+    fprintf(stderr, "  player    : %s\n", p1->name().c_str());
+    fprintf(stderr, "  opponent  : %s\n", p2->name().c_str());
+    fprintf(stderr, "  seed      : %u\n", seed);
+    fprintf(stderr, "==============================\n");
   }
   init_align();
 
