@@ -1,5 +1,6 @@
 PROG=mcts
-CXXFLAGS=-g -std=c++11
+DEBUG_FLAGS=-g -DDEBUG
+CXXFLAGS=-std=c++11 $(DEBUG_FLAGS)
 
 .DEFAULT_GOAL := $(PROG)
 
