@@ -206,7 +206,7 @@ public:
 
 class MCTSPlayer : public Player {
 public:
-  MCTSPlayer() {
+  MCTSPlayer(int _n = 1) : _n_playout(_n) {
     // root
     _tree = new GameTree(-1);
     _cur_leaf = _tree;
@@ -231,7 +231,12 @@ public:
     }
   }
 
-  virtual std::string name() override { return "mcts"; }
+  virtual std::string name() override {
+    std::string _name = "mcts (n = ";
+    _name += std::to_string(_n_playout);
+    _name += ")";
+    return _name;
+  }
 
   virtual int play() override {
     GameTree *next;
@@ -312,8 +317,8 @@ private:
       }
     }
 
-    // do one playout
-    playout();
+    // do playouts
+    for (int i = 0; i < _n_playout; i++) playout();
   }
 
   void playout() {
@@ -354,6 +359,7 @@ private:
   GameTree *_tree = nullptr;
   GameTree *_cur_leaf = _tree;
   int _total_playouts = 0;
+  int _n_playout;
 };
 
 void init_align() {
@@ -397,6 +403,7 @@ int match(Player *p1, Player *p2) {
 
 int main(int argc, char *argv[]) {
   Player *p1 = nullptr, *p2 = nullptr;
+  std::string s;
   std::string random_player = "random";
   std::string perfect_player = "perfect";
   std::string mcts_player = "mcts";
@@ -404,12 +411,18 @@ int main(int argc, char *argv[]) {
   while ((opt = getopt(argc, argv, "a:b:v")) != -1) {
     switch (opt) {
       case 'a':
-        if (optarg == random_player) {
+        s = optarg;
+        if (s == random_player) {
           p1 = new RandomPlayer();
-        } else if (optarg == perfect_player) {
+        } else if (s == perfect_player) {
           p1 = new PerfectPlayer();
-        } else if (optarg == mcts_player) {
-          p1 = new MCTSPlayer();
+        } else if (s.length() >= mcts_player.length() && s.substr(0, mcts_player.length()) == mcts_player) {
+          if (s.find(":") != std::string::npos) {
+            int n = std::stoi(s.substr(s.find(":") + 1));
+            p1 = new MCTSPlayer(n);
+          } else {
+            p1 = new MCTSPlayer();
+          }
         } else {
           fprintf(stderr, "Unknown player\n");
           exit(-1);
@@ -417,12 +430,18 @@ int main(int argc, char *argv[]) {
         break;
 
       case 'b':
-        if (optarg == random_player) {
+        s = optarg;
+        if (s == random_player) {
           p2 = new RandomPlayer();
-        } else if (optarg == perfect_player) {
+        } else if (s == perfect_player) {
           p2 = new PerfectPlayer();
-        } else if (optarg == mcts_player) {
-          p2 = new MCTSPlayer();
+        } else if (s.length() >= mcts_player.length() && s.substr(0, mcts_player.length()) == mcts_player) {
+          if (s.find(":") != std::string::npos) {
+            int n = std::stoi(s.substr(s.find(":") + 1));
+            p2 = new MCTSPlayer(n);
+          } else {
+            p2 = new MCTSPlayer();
+          }
         } else {
           fprintf(stderr, "Unknown player\n");
           exit(-1);
