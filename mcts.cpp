@@ -6,6 +6,7 @@
 #include <cmath>
 #include <vector>
 #include <stack>
+#include <queue>
 #include <algorithm>
 
 #define S 3
@@ -41,6 +42,8 @@ public:
   Player() {
     std::fill(_board, _board + SIZE, CellStatus::VACANT);
   }
+
+  virtual ~Player() {};
 
   // play one step ahead
   virtual int play() = 0;
@@ -203,7 +206,22 @@ public:
     _cur_leaf = _tree;
   }
   virtual ~MCTSPlayer() {
-    // TODO: release tree
+    // free memory
+    std::stack<GameTree *> release_stack;
+    std::queue<GameTree *> q;
+    GameTree *tr;
+    q.push(_tree);
+    while (!q.empty()) {
+      tr = q.front(); q.pop();
+      release_stack.push(tr);
+      for (auto _tr: tr->leaves) {
+        if (_tr) q.push(_tr);
+      }
+    }
+    while (!release_stack.empty()) {
+      tr = release_stack.top(); release_stack.pop();
+      delete tr;
+    }
   }
 
   virtual int play() {
@@ -285,6 +303,11 @@ private:
       }
     }
 
+    // do one playout
+    playout();
+  }
+
+  void playout() {
     CellStatus tmp_board[SIZE];
     std::copy(_board, _board + SIZE, tmp_board);
 
@@ -295,7 +318,6 @@ private:
     moves.push(max_leaf);
     tmp_board[std::find(_cur_leaf->leaves, _cur_leaf->leaves + SIZE, max_leaf) - _cur_leaf->leaves] = CellStatus::MINE;
 
-    // do one playout
     GameTree *trace = max_leaf;
     _total_playouts += 1;
     GameStatus game_status;
@@ -322,12 +344,6 @@ private:
       leaf->n_playouts += 1;
       moves.pop();
     }
-  }
-
-  void playout() {
-  }
-
-  void backprop() {
   }
 
   GameTree *_tree = nullptr;
@@ -436,6 +452,9 @@ int main(int argc, char *argv[]) {
   } else {
     printf("%d\n", result);
   }
+
+  delete p1;
+  delete p2;
 
   return 0;
 }
