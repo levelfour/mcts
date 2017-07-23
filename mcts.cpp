@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <random>
 #include <cassert>
 #include <cmath>
@@ -9,11 +11,7 @@
 #define S 3
 #define SIZE ((S) * (S))
 
-#ifdef DEBUG
-#define debug_log(...) fprintf(stderr, __VA_ARGS__)
-#else
-#define debug_log(...) {}
-#endif
+#define debug_log(...) {if (verbose) fprintf(stderr, __VA_ARGS__);}
 
 enum class CellStatus {
   MINE,
@@ -28,6 +26,7 @@ enum class GameStatus {
   DRAW,
 };
 
+bool verbose = false;
 std::mt19937 mt_rand;
 
 #define N_ALIGN (2*(S) + 2)
@@ -361,6 +360,7 @@ int match(Player *p1, Player *p2) {
     } else if (result == GameStatus::DRAW) {
       return 0;
     }
+    if (verbose) p1->dump();
 
     result = p1->update(p2->play());
     if (result == GameStatus::WIN) {
@@ -370,25 +370,72 @@ int match(Player *p1, Player *p2) {
     } else if (result == GameStatus::DRAW) {
       return 0;
     }
+    if (verbose) p1->dump();
   }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+  Player *p1 = nullptr, *p2 = nullptr;
+  std::string random_player = "random";
+  std::string perfect_player = "perfect";
+  std::string mcts_player = "mcts";
+  int opt;
+  while ((opt = getopt(argc, argv, "a:b:v")) != -1) {
+    switch (opt) {
+      case 'a':
+        if (optarg == random_player) {
+          p1 = new RandomPlayer();
+        } else if (optarg == perfect_player) {
+          p1 = new PerfectPlayer();
+        } else if (optarg == mcts_player) {
+          p1 = new MCTSPlayer();
+        } else {
+          fprintf(stderr, "Unknown player\n");
+          exit(-1);
+        }
+        break;
+
+      case 'b':
+        if (optarg == random_player) {
+          p2 = new RandomPlayer();
+        } else if (optarg == perfect_player) {
+          p2 = new PerfectPlayer();
+        } else if (optarg == mcts_player) {
+          p2 = new MCTSPlayer();
+        } else {
+          fprintf(stderr, "Unknown player\n");
+          exit(-1);
+        }
+        break;
+
+      case 'v':
+        verbose = true;
+        break;
+    }
+  }
+
+  if (!p1) p1 = new RandomPlayer();
+  if (!p2) p2 = new RandomPlayer();
+
   // initialization
   std::random_device rnd;
   auto seed = rnd();
   mt_rand.seed(seed);
-  printf("seed = %u\n", seed);
+  if (verbose) {
+    fprintf(stderr, "seed = %u\n", seed);
+  }
   init_align();
 
   // match
-  MCTSPlayer p0;
-  RandomPlayer p1;
-  int result = match(&p0, &p1);
+  int result = match(p1, p2);
 
   // result
-  p0.dump();
-  printf("winner = %d\n", result);
+  if (verbose) {
+    p1->dump();
+    printf("winner = %d\n", result);
+  } else {
+    printf("%d\n", result);
+  }
 
   return 0;
 }
