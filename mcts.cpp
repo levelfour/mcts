@@ -241,7 +241,7 @@ void init_align() {
   }
   for (int i = 0; i < S; i++) {
     align[2*S][i] = index(i, i);
-    align[2*S+1][i] = index(S - i, i);
+    align[2*S+1][i] = index(S - i - 1, i);
   }
 }
 
