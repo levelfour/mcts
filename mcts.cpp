@@ -139,14 +139,26 @@ public:
 
     int n_oppn[N_ALIGN];
     int n_mine[N_ALIGN];
+    // opponent's promissing line
     std::transform(align, align + N_ALIGN, n_oppn, [&bd](int a[]) {
+        for (int i = 0; i < S; i++) {
+          if (bd[a[i]] == CellStatus::MINE) {
+            return -1;
+          }
+        }
         int n[S];
         std::transform(a, a + S, n, [&bd](int i) {
             return bd[i] == CellStatus::OPPONENT ? 1 : 0;
           });
         return std::accumulate(n, n + S, 0);
       });
+    // player's promissing line
     std::transform(align, align + N_ALIGN, n_mine, [&bd](int a[]) {
+        for (int i = 0; i < S; i++) {
+          if (bd[a[i]] == CellStatus::OPPONENT) {
+            return -1;
+          }
+        }
         int n[S];
         std::transform(a, a + S, n, [&bd](int i) {
             return bd[i] == CellStatus::MINE ? 1 : 0;
@@ -165,7 +177,9 @@ public:
           }
         }
       }
+    }
 
+    for (int i = 0; i < N_ALIGN; i++) {
       if (n_mine[i] >= max_mine_len) {
         // complete my line
         for (int j = 0; j < S; j++) {
@@ -368,8 +382,8 @@ int main() {
   int result = match(&p0, &p1);
 
   // result
-  printf("winner = %d\n", result);
   p0.dump();
+  printf("winner = %d\n", result);
 
   return 0;
 }
