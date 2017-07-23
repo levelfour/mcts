@@ -312,13 +312,9 @@ private:
     std::copy(_board, _board + SIZE, tmp_board);
 
     // traverse path with the highest score
-    auto max_leaf = highest_leaf(_cur_leaf);
-    bool my_turn = true;
+    bool my_turn = false;
     std::stack<GameTree *> moves;
-    moves.push(max_leaf);
-    tmp_board[std::find(_cur_leaf->leaves, _cur_leaf->leaves + SIZE, max_leaf) - _cur_leaf->leaves] = CellStatus::MINE;
-
-    GameTree *trace = max_leaf;
+    GameTree *trace = _cur_leaf;
     _total_playouts += 1;
     GameStatus game_status;
 
