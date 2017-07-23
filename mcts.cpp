@@ -71,9 +71,9 @@ protected:
       });
 
     int result = std::accumulate(line, line + N_ALIGN, 0);
-    if (result == +1) {
+    if (result > 0) {
       return GameStatus::WIN;
-    } else if (result == -1) {
+    } else if (result < 0) {
       return GameStatus::LOSE;
     } else if (result == 0 && std::all_of(bd, bd + SIZE, [](CellStatus s) {
           return s != CellStatus::VACANT;
